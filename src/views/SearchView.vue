@@ -1,58 +1,73 @@
 <template>
-  <div>
-      <h1>Búsqueda de canciones en Deezer</h1>
-      <!-- Componente hijo -->
-      <SearchBar @results="handleResults" />
-      <hr />
-      <div class="filters my-3">
-        <label>
-          <input type="checkbox" v-model="sortAscending" aria-label="Ordenar ascendente" />
-          Ordenar por nombre (ascendente)
-        </label>
-        <label>
-          Duracion mínima:
-          <input type="number" v-model="minDuration" placeholder="Ejemplo: 100" aria-label="Filtrar por BPM"/>
-        </label>
-      </div>
-      <!-- Lista de canciones -->
-  <div v-if="songs.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-      <div class="col" v-for="song in filteredAndSortedSongs" :key="song.id">
-        <div class="card text-center">
-          <div class="card-body d-flex flex-column align-items-center">
-            <h5 v-if="song.title.length > 20" class="card-title">{{ song.title.substring(0,25)+"..."}}</h5>
-            <h5 v-else class="card-title">{{ song.title }}</h5>
-            <img 
-              :src="song.album.cover_medium" 
-              :alt="`Portada de ${song.album.title}`" 
-              class="img-fluid rounded mb-3">
-            <ul class="card-text list-group list-group-flush">
-                <li class="list-group-item"> <strong>Artista:</strong> {{ song.artist.name }}</li>
-                <li v-if="song.album.length > 20" class="list-group-item"> <strong>Álbum:</strong> {{ song.album.title.substring(0,20)+"..." }}</li>
-                <li v-else class="list-group-item"> <strong>Álbum:</strong> {{ song.album.title.substring(0,20)+"..." }}</li>
-                <li class="list-group-item"><strong>Duración:</strong> {{ song.duration }}</li>
-            </ul>
+  <h1>Búsqueda de canciones en Deezer</h1>
 
-            <audio :src="song.preview" controls></audio>
+  <!-- Componente hijo -->
+  <SearchBar @results="handleResults" />
+  <hr />
+
+  <div class="filters my-3">
+    <label>
+      <input type="checkbox" v-model="sortAscending" aria-label="Ordenar ascendente" />
+      Ordenar por nombre (ascendente)
+    </label>
+    <label>
+      Duración mínima:
+      <input type="number" v-model="minDuration" placeholder="Ejemplo: 100" aria-label="Filtrar por BPM" />
+    </label>
+  </div>
+
+  <!-- Lista de canciones -->
+  <div v-if="songs.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="col" v-for="song in filteredAndSortedSongs" :key="song.id">
+      <div class="card text-center">
+        <div class="card-body d-flex flex-column align-items-center">
+          <h5 v-if="song.title.length > 20" class="card-title">
+            {{ song.title.substring(0, 25) + "..." }}
+          </h5>
+          <h5 v-else class="card-title">{{ song.title }}</h5>
+
+          <img 
+            :src="song.album.cover_medium" 
+            :alt="`Portada de ${song.album.title}`" 
+            class="img-fluid rounded mb-3"
+          >
+
+          <ul class="card-text list-group list-group-flush">
+            <li class="list-group-item">
+              <strong>{{ song.artist.name }}</strong>
+            </li>
+            <li v-if="song.album.title.length > 20" class="list-group-item">
+              {{song.album.title.substring(0, 20) + "..." }}
+            </li>
+            <li v-else class="list-group-item">{{ song.album.title }}</li>
+          </ul>
+
+          <div class="audio-controls mt-2">
+              <button class="btn btn-primary" @click="playSong(song)">
+                <i :class="isPlaying && currentSong?.id === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+              </button>
           </div>
-          <div class="card-footer">
-            <button 
-              @click="toggleFavorite(song)" 
-              class="btn"
-              :class="isFavorite(song.id) ? 'btn-danger' : 'btn-primary'"
-            >
-              {{
-                isFavorite(song.id)
-                  ? "Quitar de favoritos"
-                  : "Añadir a favoritos"
-              }}
-            </button>
-          </div>
+          
         </div>
+
+        <div class="card-footer">
+          <button 
+            @click="toggleFavorite(song)" 
+            class="btn d-flex align-items-center gap-2"
+            :class="isFavorite(song.id) ? 'btn-danger' : 'btn-primary'"
+          >
+            <i :class="isFavorite(song.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
+            {{ isFavorite(song.id) ? "Eliminar" : " Añadir" }}
+          </button>
+        </div>
+
       </div>
+    </div>
   </div>
   <p v-else>No hay resultados para mostrar</p>
-</div>
+  
 </template>
+
  
  
  <script setup>
@@ -103,6 +118,26 @@
  const handleResults = (data) => {
   songs.value = data; // Actualiza la lista de canciones
  };
+
+const playSong = (song) => {
+      if (!song) return;
+      this.currentSong = song;
+      const audio = this.$refs.audioPlayer;
+      audio.src = song.preview; // Usa la URL de Deezer
+      audio.volume = this.volume;
+      audio.play();
+    }
+const pauseSong = () => {
+      this.$refs.audioPlayer.pause();
+    }
+const stopSong = () => {
+      const audio = this.$refs.audioPlayer;
+      audio.pause();
+      audio.currentTime = 0;
+    }
+const setVolume = () => {
+      this.$refs.audioPlayer.volume = this.volume;
+    }
  </script>
  
  <style>
