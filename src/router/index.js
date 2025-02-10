@@ -20,6 +20,11 @@ const routes = [
     name: 'Buscador',
     component: SearchView,
   },
+  {
+    path: '/info/:type/:id',
+    name: 'info',
+    component: () => import('../views/InfoView.vue')
+  },
 ];
 
 const router = createRouter({

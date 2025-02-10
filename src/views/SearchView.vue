@@ -43,9 +43,13 @@
           </ul>
 
           <div class="audio-controls mt-2">
-              <button class="btn btn-primary" @click="playSong(song)">
-                <i :class="isPlaying && currentSong?.id === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
-              </button>
+            <div class="d-flex flex-column align-items-center gap-2">
+              <div class="btn-group">
+                <button class="btn btn-sm btn-primary" @click="togglePlay(song)">
+                  <i :class="isPlayingId === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+                </button>
+              </div>
+            </div>
           </div>
           
         </div>
@@ -59,6 +63,9 @@
             <i :class="isFavorite(song.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
             {{ isFavorite(song.id) ? "Eliminar" : " Añadir" }}
           </button>
+
+            <a :href="`/info/${song.id}`" class="btn btn-info mt-2">Más información</a>
+
         </div>
 
       </div>
@@ -66,6 +73,7 @@
   </div>
   <p v-else>No hay resultados para mostrar</p>
   
+  <PlayerBar />
 </template>
 
  
@@ -73,7 +81,9 @@
  <script setup>
  import { ref, computed } from "vue";
  import SearchBar from "../components/SearchBar.vue"; // Importa el componente hijo
+ import PlayerBar from "../components/PlayerBar.vue";
  import { useFavoritesStore } from '../stores/favorites';
+ import { usePlayerStore } from '../stores/playerStore';
  
  
  const songs = ref([]); // Estado para almacenar la lista de canciones
@@ -119,27 +129,39 @@
   songs.value = data; // Actualiza la lista de canciones
  };
 
-const playSong = (song) => {
-      if (!song) return;
-      this.currentSong = song;
-      const audio = this.$refs.audioPlayer;
-      audio.src = song.preview; // Usa la URL de Deezer
-      audio.volume = this.volume;
-      audio.play();
-    }
-const pauseSong = () => {
-      this.$refs.audioPlayer.pause();
-    }
-const stopSong = () => {
-      const audio = this.$refs.audioPlayer;
-      audio.pause();
-      audio.currentTime = 0;
-    }
-const setVolume = () => {
-      this.$refs.audioPlayer.volume = this.volume;
-    }
+const playerStore = usePlayerStore();
+
+const togglePlay = (song) => {
+  if (playerStore.currentSong?.id === song.id) {
+    playerStore.togglePlay()
+  } else {
+    playerStore.playSong(song)
+  }
+}
+
+// Actualizar las propiedades computadas
+const isPlayingId = computed(() => 
+  playerStore.isPlaying ? playerStore.currentSong?.id : null
+)
+
+// Puedes eliminar las funciones stopSong y updateProgress ya que ahora
+// el PlayerBar maneja toda la reproducción
+
  </script>
  
  <style>
+.audio-controls {
+  width: 100%;
+  padding: 0 1rem;
+}
 
+.progress {
+  cursor: pointer;
+  background-color: #e9ecef;
+}
+
+.progress-bar {
+  background-color: #007bff;
+  transition: width 0.1s ease;
+}
 </style>

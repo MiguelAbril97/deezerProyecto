@@ -1,31 +1,7 @@
 <template>
   <div>
-    <!-- Carrusel de artistas -->
     <h2>Artistas más escuchados</h2>
-      <div v-if="topArtists.length > 0" id="artistCarousel" class="carousel slide my-3" data-bs-ride="carousel">
-    <div class="carousel-inner">
-        <div 
-          v-for="(artist, index) in topArtists" 
-          :key="artist.id" 
-          :class="['carousel-item', { 'active': index === 0 }]"
-        >
-          <img :src="artist.picture_medium" class="d-block w-100" :alt="artist.name">
-          <div class="carousel-caption d-none d-md-block">
-            <h5>{{ artist.name }}</h5>
-          </div>
-        </div>
-      </div>
-    
-      <!-- Controles -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#artistCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#artistCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-    </div>
+    <ArtistCarrousel v-if="topArtists.length > 0" :artists="topArtists" />
 
     <!-- Fila de radios más populares -->
      <h2>Radios más escuchadas</h2>
@@ -88,6 +64,8 @@
               <i :class="isFavorite(song.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
               {{ isFavorite(song.id) ? "Eliminar" : " Añadir" }}
             </button>
+
+            <a :href="`/info/${song.id}`" class="btn btn-info mt-2">Más información</a>
           </div>
         </div>
       </div>
@@ -98,11 +76,15 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useFavoritesStore } from '@/stores/favorites'; 
+import ArtistCarrousel from '../components/ArtistCarrousel.vue'; // Corregido Carousel
+import { usePlayerStore } from '@/stores/playerStore';
 
 const favoritesStore = useFavoritesStore();
 const topArtists = ref([]);
 const topSongs = ref([]);
 const topRadios = ref([]);
+
+const playerStore = usePlayerStore();
 
 // Función para obtener datos del chart de Deezer
 const fetchTopArtists = async () => {
@@ -113,8 +95,7 @@ const fetchTopArtists = async () => {
       throw new Error('Error fetching top artists from Deezer');
     }
     const data = await response.json();
-    
-    // Asignar los artistas a la variable topArtists
+    // Limitamos a solo 3 artistas
     topArtists.value = data.data.slice(0, 3) || [];
   } catch (error) {
     console.error('Error fetching top artists:', error);
@@ -169,13 +150,7 @@ const currentSong = ref(null);
 const isPlaying = ref(false);
 
 const playSong = (song) => {
-  // Implementa tu lógica de reproducción aquí
-  if (currentSong.value?.id === song.id) {
-    isPlaying.value = !isPlaying.value;
-  } else {
-    currentSong.value = song;
-    isPlaying.value = true;
-  }
+  playerStore.playSong(song);
 };
 
 onMounted(() => {

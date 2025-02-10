@@ -14,8 +14,11 @@
         </div>
         <div class="song-actions">
           <button class="deleteBtn" @click="removeFromFavorites(song.id)">Eliminar</button>
-          <button @click="playSong">Reproducir</button>
+          <button @click="playSong(song)">
+            <i class="fas fa-play"></i> Reproducir
+          </button>
         </div>
+        <a :href="`/info/${song.id}`" class="btn btn-info mt-2">Más información</a>
       </div>
     </transition-group>
     </div>
@@ -25,9 +28,11 @@
   <script setup>
   // Accede a la store
 import { useFavoritesStore } from '@/stores/favorites'; 
+import { usePlayerStore } from '@/stores/playerStore';
 import { computed } from 'vue';
 // Vincula datos de la store
 const favoritesStore = useFavoritesStore();
+const playerStore = usePlayerStore();
 //const playlist = ref(favoritesStore.playlist);
 /*
 No funcionará porque favoritesStore.favorites es array reactivo manejado internamente por Pinia. Al envolverlo en un ref, estás creando una nueva referencia que no se sincronizará automáticamente con el estado del Store.
@@ -39,9 +44,8 @@ const removeFromFavorites = (songId) => {
   favoritesStore.removeSong(songId);
 };
 
-const playSong = () => {
-  // Funcionalidad futura para reproducir canción
-  console.log("Reproducir canción");
+const playSong = (song) => {
+  playerStore.playSong(song);
 };
 
   </script>

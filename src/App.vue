@@ -1,8 +1,7 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import Menu from "./components/menu.vue";
-
-
+import PlayerBar from './components/PlayerBar.vue'
 
 </script>
 
@@ -23,17 +22,15 @@ import Menu from "./components/menu.vue";
       <router-view />
     </main>
 
+    <!-- Player Bar -->
+    <PlayerBar />
+
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3">
       <p>&copy; 2024 Deezer Music Client. Todos los derechos reservados.</p>
     </footer>
   </div>
 </template>
-
-<script setup>
-
-</script>
-
 
 <style lang="scss">
 nav{
