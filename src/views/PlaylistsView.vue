@@ -18,7 +18,6 @@
             <i class="fas fa-play"></i> Reproducir
           </button>
         </div>
-        <a :href="`/info/${song.id}`" class="btn btn-info mt-2">Más información</a>
       </div>
     </transition-group>
     </div>

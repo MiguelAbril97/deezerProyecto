@@ -19,9 +19,7 @@
    // Función para realizar la búsqueda
   const searchDeezer = async () => {
     if (searchQuery.value.trim() === "") return; // Evita búsquedas vacías
-    const url = `https://cors-anywhere.herokuapp.com/https://api.deezer.com/search?q=${encodeURIComponent(
-      searchQuery.value
-    )}`;
+    const url = `http://localhost:8080/https://api.deezer.com/search?q=${searchQuery.value}`;
     try {
       const response = await fetch(url);
       if (!response.ok) {

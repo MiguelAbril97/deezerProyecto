@@ -1,19 +1,44 @@
 <template>
   <div>
-    <h2>Artistas más escuchados</h2>
+    <div v-if="isLoading" class="text-center my-4">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+
+    <div v-if="!isLoading && topSongs.length === 0" class="alert alert-warning">
+      No se pudieron cargar las canciones. Por favor, intente más tarde.
+    </div>
+
     <ArtistCarrousel v-if="topArtists.length > 0" :artists="topArtists" />
 
-    <!-- Fila de radios más populares -->
-     <h2>Radios más escuchadas</h2>
-    <div v-if="topRadios.length > 0" class="row g-4">
-      <div v-for="radio in topRadios" :key="radio.id" class="col-12 col-md-3">
-        <div class="card">
+    <!-- Fila de albums más populares -->
+    <h2>Álbumes destacados</h2>
+    <div v-if="topAlbum.length > 0" class="row g-4">
+      <div v-for="album in topAlbum" :key="album.id" class="col-12 col-md-3">
+        <div class="card h-100">
           <img 
-            :src="radio.picture_small" 
-            class="img-fluid rounded mb-3"
+            :src="album.cover_medium" 
+            class="card-img-top"
+            :alt="album.title"
           >
           <div class="card-body">
-            <h5 class="card-title">{{ radio.title }}</h5>
+            <h5 class="card-title text-truncate">{{ album.title }}</h5>
+            <p class="card-text text-truncate" v-if="album.artist">
+              <a href="#" 
+                @click.prevent="navigateToArtist(album.artist.id)" 
+                class="text-decoration-none">
+                {{ album.artist.name }}
+              </a>
+            </p>
+          </div>
+          <div class="card-footer">
+            <button 
+              @click="navigateToAlbum(album.id)"
+              class="btn btn-primary w-100"
+            >
+              Ver detalles
+            </button>
           </div>
         </div>
       </div>
@@ -23,49 +48,43 @@
     <p v-else>No hay resultados para mostrar.</p>
 
     <!-- Grid de canciones -->
-    <div v-if="topSongs.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-      <div class="col" v-for="song in topSongs" :key="song.id">
-        <div class="card text-center">
-          <div class="card-body d-flex flex-column align-items-center">
-            <h5 v-if="song.title.length > 20" class="card-title">
-              {{ song.title.substring(0, 25) + "..." }}
-            </h5>
-            <h5 v-else class="card-title">{{ song.title }}</h5>
-
-            <img 
-              :src="song.album.cover_medium" 
-              :alt="`Portada de ${song.album.title}`" 
-              class="img-fluid rounded mb-3"
-            >
-
-            <ul class="card-text list-group list-group-flush">
-              <li class="list-group-item">
-                <strong>{{ song.artist.name }}</strong>
-              </li>
-              <li v-if="song.album.title.length > 20" class="list-group-item">
-                {{ song.album.title.substring(0, 20) + "..." }}
-              </li>
-              <li v-else class="list-group-item">{{ song.album.title }}</li>
-            </ul>
-
-            <div class="audio-controls mt-2">
-              <button class="btn btn-primary" @click="playSong(song)">
-                <i :class="isPlaying && currentSong?.id === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
-              </button>
-            </div>
+    <div v-if="topSongs.length > 0" class="row g-4">
+      <div v-for="song in topSongs" :key="song.id" class="col-12 col-md-3">
+        <div class="card h-100">
+          <img 
+            :src="song.album.cover_medium" 
+            :alt="`Portada de ${song.album.title}`" 
+            class="card-img-top"
+          >
+          <div class="card-body">
+            <h5 class="card-title text-truncate">{{ song.title }}</h5>
+            <p class="card-text text-truncate">
+              <a href="#" 
+                @click.prevent="navigateToArtist(song.artist.id)" 
+                class="text-decoration-none">
+                {{ song.artist.name }}
+              </a>
+            </p>
+            <p class="card-text text-truncate">
+              <a href="#" 
+                @click.prevent="navigateToAlbum(song.album.id)" 
+                class="text-decoration-none">
+                {{ song.album.title }}
+              </a>
+            </p>
           </div>
-
-          <div class="card-footer">
+          <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary flex-grow-1" @click="playSong(song)">
+              <i :class="isPlaying && currentSong?.id === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+              {{ isPlaying && currentSong?.id === song.id ? 'Pausar' : 'Reproducir' }}
+            </button>
             <button 
               @click="toggleFavorite(song)" 
-              class="btn d-flex align-items-center gap-2"
-              :class="isFavorite(song.id) ? 'btn-danger' : 'btn-primary'"
+              class="btn"
+              :class="isFavorite(song.id) ? 'btn-danger' : 'btn-outline-primary'"
             >
               <i :class="isFavorite(song.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
-              {{ isFavorite(song.id) ? "Eliminar" : " Añadir" }}
             </button>
-
-            <a :href="`/info/${song.id}`" class="btn btn-info mt-2">Más información</a>
           </div>
         </div>
       </div>
@@ -78,61 +97,82 @@ import { ref, onMounted } from 'vue';
 import { useFavoritesStore } from '@/stores/favorites'; 
 import ArtistCarrousel from '../components/ArtistCarrousel.vue'; // Corregido Carousel
 import { usePlayerStore } from '@/stores/playerStore';
+import { useRouter } from 'vue-router';
 
 const favoritesStore = useFavoritesStore();
 const topArtists = ref([]);
 const topSongs = ref([]);
-const topRadios = ref([]);
+const topAlbum = ref([]);
 
 const playerStore = usePlayerStore();
+const router = useRouter();
+
+const isLoading = ref(true);
 
 // Función para obtener datos del chart de Deezer
 const fetchTopArtists = async () => {
   try {
-    const url = 'https://cors-anywhere.herokuapp.com/https://api.deezer.com/chart/0/artists';
+    const url = 'http://localhost:8080/https://api.deezer.com/chart/0/artists';
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Error fetching top artists from Deezer');
-    }
     const data = await response.json();
-    // Limitamos a solo 3 artistas
-    topArtists.value = data.data.slice(0, 3) || [];
+    console.log('Artists data:', data);
+    topArtists.value = data.data.slice(0, 3);
+    return topArtists.value;
   } catch (error) {
-    console.error('Error fetching top artists:', error);
+    console.error('Error in fetchTopArtists:', error);
+    topArtists.value = [];
   }
 };
 
 const fetchTopSongs = async () => {
   try {
-    const url = 'https://cors-anywhere.herokuapp.com/https://api.deezer.com/chart/0/tracks';
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Error fetching top songs from Deezer');
-    }
+    const url = 'http://localhost:8080/https://api.deezer.com/chart/0/tracks';
+    const response = await fetch(url);  
     const data = await response.json();
-    
-    // Asignar las canciones a la variable topSongs
-    topSongs.value = data.data || [];
+    topSongs.value = data.data;
+    return topSongs.value;
   } catch (error) {
-    console.error('Error fetching top songs:', error);
+    console.error('Error in fetchTopSongs:', error);
+    topSongs.value = [];
   }
 };
 
-
-const fetchTopRadio = async () => {
+const fetchTopAlbum = async () => {
   try {
-    const url = 'https://cors-anywhere.herokuapp.com/https://api.deezer.com/radio/top';
+    // Corregir la URL - cambiada de artists a albums
+    const url = 'http://localhost:8080/https://api.deezer.com/chart/0/albums';
+    console.log('Fetching albums from:', url);
+    
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error('Error fetching chart data from Deezer');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
     const data = await response.json();
+    console.log('Albums data:', data);
 
-    topRadios.value = data.data.slice(0, 9) || [];
+    if (!data.data || !Array.isArray(data.data)) {
+      throw new Error('Invalid albums data format');
+    }
+
+    // Validar y filtrar álbumes válidos
+    const validAlbums = data.data.filter(album => 
+      album && 
+      album.id && 
+      album.title && 
+      album.cover_medium
+    );
+
+    console.log(`Found ${validAlbums.length} valid albums`);
+    topAlbum.value = validAlbums.slice(0, 9);
+    return topAlbum.value;
   } catch (error) {
-    console.error('Error fetching chart data:', error);
+    console.error('Error in fetchTopAlbum:', error);
+    console.error('Error details:', error.message);
+    topAlbum.value = [];
   }
 };
+
 // Función para verificar favoritos
 const isFavorite = (id) => favoritesStore.isFavorite(id);
 
@@ -153,10 +193,39 @@ const playSong = (song) => {
   playerStore.playSong(song);
 };
 
-onMounted(() => {
-  fetchTopArtists();
-  fetchTopSongs();
-  fetchTopRadio();
+const navigateToArtist = (artistId) => {
+  router.push(`/info/artist/${artistId}`);
+};
+
+const navigateToAlbum = (albumId) => {
+  router.push(`/info/album/${albumId}`);
+};
+
+onMounted(async () => {
+  console.log('Component mounted');
+  isLoading.value = true;
+  
+  try {
+    // Ejecutar las peticiones en orden y loggear resultados
+    const artists = await fetchTopArtists();
+    console.log('Artists loaded:', artists?.length || 0);
+    
+    const songs = await fetchTopSongs();
+    console.log('Songs loaded:', songs?.length || 0);
+    
+    const albums = await fetchTopAlbum();
+    console.log('Albums loaded:', albums?.length || 0);
+    
+  } catch (error) {
+    console.error('Error in data loading:', error);
+  } finally {
+    isLoading.value = false;
+    console.log('Loading completed. Data status:', {
+      artists: topArtists.value.length,
+      songs: topSongs.value.length,
+      albums: topAlbum.value.length
+    });
+  }
 });
 </script>
 
@@ -167,7 +236,8 @@ onMounted(() => {
 }
 
 .card {
-  height: 100%;
+  width: 250px;
+  margin: 0 auto;
   transition: transform 0.2s;
 }
 
@@ -175,13 +245,47 @@ onMounted(() => {
   transform: translateY(-5px);
 }
 
-.img-fluid {
-  max-width: 200px;
+.card-img-top {
+  width: 100%;
   height: auto;
+  aspect-ratio: 1;  /* Mantiene proporción cuadrada */
+  object-fit: cover;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid rgba(0,0,0,.125);
+  padding: 1rem;
+}
+
+.text-truncate {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .list-group-item {
   background-color: transparent;
   padding: 0.5rem;
 } 
+
+a {
+  color: inherit;
+  cursor: pointer;
+}
+
+a:hover {
+  text-decoration: underline !important;
+  opacity: 0.8;
+}
+
+/* Eliminar estilos antiguos que ya no necesitamos */
+.img-fluid {
+  display: none;
+}
 </style>

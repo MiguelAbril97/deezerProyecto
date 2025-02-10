@@ -1,8 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 
 import HomeView from '../views/HomeView.vue';
 import PlaylistsView from '../views/PlaylistsView.vue';
 import SearchView from '../views/SearchView.vue';
+import InfoView from '../views/InfoView.vue';
 
 const routes = [
   {
@@ -23,7 +24,7 @@ const routes = [
   {
     path: '/info/:type/:id',
     name: 'info',
-    component: () => import('../views/InfoView.vue')
+    component: InfoView,
   },
 ];
 

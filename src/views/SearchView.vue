@@ -1,91 +1,87 @@
 <template>
-  <h1>Búsqueda de canciones en Deezer</h1>
+  <div class="container">
+    <h1>Buscador</h1>
+    <SearchBar @results="handleResults" />
+    <hr />
 
-  <!-- Componente hijo -->
-  <SearchBar @results="handleResults" />
-  <hr />
+    <div class="filters my-3">
+      <label>
+        <input type="checkbox" v-model="sortAscending" aria-label="Ordenar ascendente" />
+        Ordenar por nombre (ascendente)
+      </label>
+      <label>
+        Duración mínima:
+        <input type="number" v-model="minDuration" placeholder="Ejemplo: 100" aria-label="Filtrar por BPM" />
+      </label>
+    </div>
 
-  <div class="filters my-3">
-    <label>
-      <input type="checkbox" v-model="sortAscending" aria-label="Ordenar ascendente" />
-      Ordenar por nombre (ascendente)
-    </label>
-    <label>
-      Duración mínima:
-      <input type="number" v-model="minDuration" placeholder="Ejemplo: 100" aria-label="Filtrar por BPM" />
-    </label>
-  </div>
-
-  <!-- Lista de canciones -->
-  <div v-if="songs.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    <div class="col" v-for="song in filteredAndSortedSongs" :key="song.id">
-      <div class="card text-center">
-        <div class="card-body d-flex flex-column align-items-center">
-          <h5 v-if="song.title.length > 20" class="card-title">
-            {{ song.title.substring(0, 25) + "..." }}
-          </h5>
-          <h5 v-else class="card-title">{{ song.title }}</h5>
-
+    <!-- Lista de canciones -->
+    <div v-if="songs.length > 0" class="row g-4">
+      <div class="col-12 col-md-3" v-for="song in filteredAndSortedSongs" :key="song.id">
+        <div class="card h-100">
           <img 
             :src="song.album.cover_medium" 
             :alt="`Portada de ${song.album.title}`" 
-            class="img-fluid rounded mb-3"
+            class="card-img-top"
           >
-
-          <ul class="card-text list-group list-group-flush">
-            <li class="list-group-item">
-              <strong>{{ song.artist.name }}</strong>
-            </li>
-            <li v-if="song.album.title.length > 20" class="list-group-item">
-              {{song.album.title.substring(0, 20) + "..." }}
-            </li>
-            <li v-else class="list-group-item">{{ song.album.title }}</li>
-          </ul>
-
-          <div class="audio-controls mt-2">
-            <div class="d-flex flex-column align-items-center gap-2">
-              <div class="btn-group">
-                <button class="btn btn-sm btn-primary" @click="togglePlay(song)">
-                  <i :class="isPlayingId === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
-                </button>
-              </div>
-            </div>
+          <div class="card-body">
+            <h5 class="card-title text-truncate">{{ song.title }}</h5>
+            <p class="card-text text-truncate">
+              <a href="#" 
+                @click.prevent="navigateToArtist(song.artist.id)" 
+                class="text-decoration-none">
+                {{ song.artist.name }}
+              </a>
+            </p>
+            <p class="card-text text-truncate">
+              <a href="#" 
+                @click.prevent="navigateToAlbum(song.album.id)" 
+                class="text-decoration-none">
+                {{ song.album.title }}
+              </a>
+            </p>
           </div>
-          
+          <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary flex-grow-1" @click="togglePlay(song)">
+              <i :class="isPlayingId === song.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+              {{ isPlayingId === song.id ? 'Pausar' : 'Reproducir' }}
+            </button>
+            <button 
+              @click="toggleFavorite(song)" 
+              class="btn"
+              :class="isFavorite(song.id) ? 'btn-danger' : 'btn-outline-primary'"
+            >
+              <i :class="isFavorite(song.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
+            </button>
+          </div>
         </div>
-
-        <div class="card-footer">
-          <button 
-            @click="toggleFavorite(song)" 
-            class="btn d-flex align-items-center gap-2"
-            :class="isFavorite(song.id) ? 'btn-danger' : 'btn-primary'"
-          >
-            <i :class="isFavorite(song.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
-            {{ isFavorite(song.id) ? "Eliminar" : " Añadir" }}
-          </button>
-
-            <a :href="`/info/${song.id}`" class="btn btn-info mt-2">Más información</a>
-
-        </div>
-
       </div>
     </div>
+    <p v-else>No hay resultados para mostrar</p>
+    
+    <PlayerBar />
   </div>
-  <p v-else>No hay resultados para mostrar</p>
-  
-  <PlayerBar />
 </template>
 
- 
- 
- <script setup>
+<script setup>
  import { ref, computed } from "vue";
  import SearchBar from "../components/SearchBar.vue"; // Importa el componente hijo
  import PlayerBar from "../components/PlayerBar.vue";
  import { useFavoritesStore } from '../stores/favorites';
  import { usePlayerStore } from '../stores/playerStore';
+ import { useRouter } from 'vue-router';
  
- 
+
+const router = useRouter();
+
+const navigateToArtist = (artistId) => {
+  router.push(`/info/artist/${artistId}`);
+};
+
+const navigateToAlbum = (albumId) => {
+  router.push(`/info/album/${albumId}`);
+};
+
  const songs = ref([]); // Estado para almacenar la lista de canciones
  
  
@@ -149,19 +145,54 @@ const isPlayingId = computed(() =>
 
  </script>
  
- <style>
-.audio-controls {
+ <style scoped>
+.card {
+  width: 250px;
+  margin: 0 auto;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-img-top {
   width: 100%;
-  padding: 0 1rem;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid rgba(0,0,0,.125);
+  padding: 1rem;
+}
+
+.text-truncate {
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  cursor: pointer;
+}
+
+a:hover {
+  text-decoration: underline !important;
+  opacity: 0.8;
+}
+
+/* Eliminar estilos antiguos */
+.audio-controls {
+  display: none;
 }
 
 .progress {
-  cursor: pointer;
-  background-color: #e9ecef;
-}
-
-.progress-bar {
-  background-color: #007bff;
-  transition: width 0.1s ease;
+  display: none;
 }
 </style>
