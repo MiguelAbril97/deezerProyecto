@@ -23,16 +23,36 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  album: {
-    type: Object,
-    required: true
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { computed } from 'vue';
+
+
+const route = useRoute()
+const id = computed(() => route.params.id);
+const album = ref([])
+
+const fetchAlbum = async () => {
+  try {
+    const url = 'http://localhost:8080/https://api.deezer.com/album/'+id.value;
+    console.log(url)
+    const response = await fetch(url);  
+    const data = await response.json();
+    album.value = data.data;
+    return album.value;
+  } catch (error) {
+    console.error('Error in fetchAlbums:', error);
   }
-});
+};
+
 
 const formatDuration = (seconds) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
+
+onMounted(() => {
+  fetchAlbum();
+})
 </script>

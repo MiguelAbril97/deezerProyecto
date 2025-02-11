@@ -47,6 +47,8 @@
     <!-- Mensaje en caso de que no haya resultados -->
     <p v-else>No hay resultados para mostrar.</p>
 
+    <h2>Canciones más escuchadas</h2>
+
     <!-- Grid de canciones -->
     <div v-if="topSongs.length > 0" class="row g-4">
       <div v-for="song in topSongs" :key="song.id" class="col-12 col-md-3">
@@ -95,7 +97,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useFavoritesStore } from '@/stores/favorites'; 
-import ArtistCarrousel from '../components/ArtistCarrousel.vue'; // Corregido Carousel
+import ArtistCarrousel from '../components/ArtistCarrousel.vue';
 import { usePlayerStore } from '@/stores/playerStore';
 import { useRouter } from 'vue-router';
 

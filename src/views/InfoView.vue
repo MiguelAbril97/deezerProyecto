@@ -8,7 +8,16 @@ const { type, id } = route.params;
 
 // Cargar dinámicamente el componente según el tipo
 const DynamicComponent = computed(() => {
-  return defineAsyncComponent(() => import(`@/components/details/${type}-details.vue`));
+
+  if(type==='album'){
+    return defineAsyncComponent(() => import(`@/components/details/album-details.vue`));
+  }else if(type==='artist'){
+    return defineAsyncComponent(() => import(`@/components/details/artist-details.vue`));
+  }else{
+    return defineAsyncComponent(() => import(`@/components/details/track-details.vue`));
+  }
+
+  //return defineAsyncComponent(() => import(`@/components/details/${type}-details.vue`));
 });
 </script>
 
@@ -17,7 +26,6 @@ const DynamicComponent = computed(() => {
     <div class="loading" v-if="loading">Cargando...</div>
     
     <div>
-    <h1>Detalles de {{ type }}</h1>
     <component :is="DynamicComponent" :id="id"></component>
     </div>
 
