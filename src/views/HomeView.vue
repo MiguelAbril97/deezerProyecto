@@ -59,7 +59,13 @@
             class="card-img-top"
           >
           <div class="card-body">
-            <h5 class="card-title text-truncate">{{ song.title }}</h5>
+            <h5 class="card-title text-truncate">
+              <a href="#" @click.prevent="navigateToTrack(song.id)"
+              class="text-decoration-none"
+              >
+                {{ song.title }}
+              </a>
+            </h5>
             <p class="card-text text-truncate">
               <a href="#" 
                 @click.prevent="navigateToArtist(song.artist.id)" 
@@ -201,6 +207,10 @@ const navigateToArtist = (artistId) => {
 
 const navigateToAlbum = (albumId) => {
   router.push(`/info/album/${albumId}`);
+};
+
+const navigateToTrack = (trackId) => {
+  router.push(`/info/track/${trackId}`);
 };
 
 onMounted(async () => {

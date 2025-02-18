@@ -14,8 +14,19 @@
     <div class="tracklist" v-if="album.tracks">
       <h3>Lista de canciones</h3>
       <ol>
-        <li v-for="track in album.tracks.data" :key="track.id">
-          {{ track.title }} - {{ formatDuration(track.duration) }}
+        <li v-for="track in album.tracks.data" :key="track.id" class="track-item">
+          <button @click="playTrack(track)" class="play-btn">
+            <i :class="isCurrentTrack(track) ? 'fas fa-pause' : 'fas fa-play'"></i>
+          </button>
+          <button 
+            @click="toggleFavorite(track)" 
+            class="btn favorite-btn"
+            :class="isFavorite(track.id) ? 'btn-danger' : 'btn-outline-primary'"
+          >
+            <i :class="isFavorite(track.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
+          </button>
+          <span class="track-title mx-3">{{ track.title }}</span>
+          <span class="track-duration">{{ formatDuration(track.duration) }}</span>
         </li>
       </ol>
     </div>
@@ -25,12 +36,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { computed } from 'vue';
-
+import { computed } from 'vue'
+import { useFavoritesStore } from '../../stores/favorites';
+import { usePlayerStore } from '../../stores/playerStore';
 
 const route = useRoute()
-const id = computed(() => route.params.id);
+const id = computed(() => route.params.id)
 const album = ref([])
+const playerStore = usePlayerStore()
+const favoritesStore = useFavoritesStore()
+
 
 const fetchAlbum = async () => {
   try {
@@ -38,21 +53,126 @@ const fetchAlbum = async () => {
     console.log(url)
     const response = await fetch(url);  
     const data = await response.json();
-    album.value = data.data;
+    album.value = data;
     return album.value;
   } catch (error) {
     console.error('Error in fetchAlbums:', error);
   }
 };
 
+const playTrack = (track) => {
+  if (playerStore.currentSong?.id === track.id) {
+    playerStore.togglePlay()
+  } else {
+    playerStore.playSong(track)
+  }
+}
+
+const isCurrentTrack = (track) => {
+  return playerStore.currentSong?.id === track.id && playerStore.isPlaying
+}
 
 const formatDuration = (seconds) => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+const isFavorite = (id) => favoritesStore.isFavorite(id);
+ 
+const toggleFavorite = (song) => {
+    if (favoritesStore.isFavorite(song.id)) {
+      favoritesStore.removeSong(song.id);
+    } else {
+      favoritesStore.addSong(song);
+    }
+  };
 
 onMounted(() => {
-  fetchAlbum();
+  fetchAlbum()
 })
 </script>
+
+<style scoped>
+.album-details {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-section {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.cover-image {
+  width: 400px;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.main-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.track-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.play-btn {
+  background: none;
+  border: none;
+  color: #1DB954;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  transition: transform 0.2s;
+}
+
+.play-btn:hover {
+  transform: scale(1.1);
+  background-color: rgba(29, 185, 84, 0.1);
+}
+
+.track-title {
+  flex-grow: 1;
+  margin-right: 20px;
+}
+
+.track-duration {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+  margin-top: 15px;
+  color: #666;
+}
+
+.stats span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>

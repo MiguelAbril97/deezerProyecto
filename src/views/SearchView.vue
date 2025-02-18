@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <h1>Buscador</h1>
-    <SearchBar @results="handleResults" />
+    <SearchBar @results="handleSearchResults" ref="searchBarRef" />
     <hr />
 
     <div class="filters my-3">
@@ -25,7 +25,13 @@
             class="card-img-top"
           >
           <div class="card-body">
-            <h5 class="card-title text-truncate">{{ song.title }}</h5>
+            <h5 class="card-title text-truncate">
+              <a href="#" @click.prevent="navigateToTrack(song.id)"
+              class="text-decoration-none"
+              >
+                {{ song.title }}
+              </a>
+            </h5>
             <p class="card-text text-truncate">
               <a href="#" 
                 @click.prevent="navigateToArtist(song.artist.id)" 
@@ -59,7 +65,25 @@
     </div>
     <p v-else>No hay resultados para mostrar</p>
     
-    <PlayerBar />
+    <div class="text-center mt-4 mb-4">
+      <button 
+        v-if="hasMore" 
+        @click="loadMore" 
+        class="btn btn-primary"
+        :disabled="isLoading"
+      >
+        <span v-if="isLoading">
+          <i class="fas fa-spinner fa-spin me-2"></i>Cargando...
+        </span>
+        <span v-else>
+          Más resultados
+        </span>
+      </button>
+      
+      <div v-if="!hasMore && songs.length > 0" class="text-muted">
+        No hay más resultados
+      </div>
+    </div>
   </div>
 </template>
 
@@ -72,7 +96,19 @@
  import { useRouter } from 'vue-router';
  
 
-const router = useRouter();
+const router = useRouter()
+const searchBarRef = ref(null)
+const loadingRef = ref(null)
+const songs = ref([])
+const isLoading = ref(false)
+const hasMore = ref(false)
+const total = ref(0)
+const sortAscending = ref(false); // Controla el orden ascendente o descendente
+const minDuration = ref(0); // BPM mínimo para el filtro
+
+const favoritesStore = useFavoritesStore();
+const isFavorite = (id) => favoritesStore.isFavorite(id);
+  
 
 const navigateToArtist = (artistId) => {
   router.push(`/info/artist/${artistId}`);
@@ -82,29 +118,47 @@ const navigateToAlbum = (albumId) => {
   router.push(`/info/album/${albumId}`);
 };
 
- const songs = ref([]); // Estado para almacenar la lista de canciones
- 
- 
- const sortAscending = ref(false); // Controla el orden ascendente o descendente
- const minDuration = ref(0); // BPM mínimo para el filtro
- 
- const favoritesStore = useFavoritesStore();
-  const isFavorite = (id) => favoritesStore.isFavorite(id);
-  
-  const toggleFavorite = (song) => {
-    if (favoritesStore.isFavorite(song.id)) {
-      favoritesStore.removeSong(song.id);
-    } else {
-      favoritesStore.addSong(song);
+const navigateToTrack = (trackId) => {
+  router.push(`/info/track/${trackId}`);
+};
+
+const handleSearchResults = ({ songs: newSongs, isNewSearch, total: newTotal, hasMore: moreAvailable }) => {
+  if (isNewSearch) {
+    songs.value = newSongs;
+  } else {
+    songs.value = [...songs.value, ...newSongs];
+  }
+  hasMore.value = moreAvailable;
+  total.value = newTotal;
+  isLoading.value = false; // Reset loading state after results are processed
+};
+
+const loadMore = async () => {
+  if (!isLoading.value && hasMore.value) {
+    isLoading.value = true;
+    try {
+      await searchBarRef.value?.loadMore();
+    } catch (error) {
+      console.error('Error loading more results:', error);
+      isLoading.value = false; // Reset loading state on error
     }
-  };
- // Lista filtrada y ordenada
- const filteredAndSortedSongs = computed(() => {
-  let result = [...songs.value];
- 
-  // Filtrar por BPM mínimo
-  if (minDuration.value > 0) {
-    result = result.filter(song => song.duration && song.duration >= minDuration.value);
+  }
+};
+
+const toggleFavorite = (song) => {
+  if (favoritesStore.isFavorite(song.id)) {
+    favoritesStore.removeSong(song.id);
+  } else {
+    favoritesStore.addSong(song);
+  }
+};
+// Lista filtrada y ordenada
+const filteredAndSortedSongs = computed(() => {
+ let result = [...songs.value];
+
+ // Filtrar por BPM mínimo
+ if (minDuration.value > 0) {
+   result = result.filter(song => song.duration && song.duration >= minDuration.value);
   }
  
  
@@ -121,9 +175,6 @@ const navigateToAlbum = (albumId) => {
  
  
  // Maneja los resultados emitidos por el componente hijo
- const handleResults = (data) => {
-  songs.value = data; // Actualiza la lista de canciones
- };
 
 const playerStore = usePlayerStore();
 
@@ -140,8 +191,6 @@ const isPlayingId = computed(() =>
   playerStore.isPlaying ? playerStore.currentSong?.id : null
 )
 
-// Puedes eliminar las funciones stopSong y updateProgress ya que ahora
-// el PlayerBar maneja toda la reproducción
 
  </script>
  

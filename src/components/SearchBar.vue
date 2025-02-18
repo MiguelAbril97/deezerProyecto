@@ -1,39 +1,59 @@
 <template>
-    <div class="search-container">
-      <div class="search-input">
-        <input
-          type="text"
-          v-model="searchQuery"
-          @keyup.enter="searchDeezer"
-          placeholder="Buscar en Deezer"
-        />
-        <button @click="searchDeezer">
-          <i class="bi bi-search"></i> <!-- Ícono de búsqueda de Bootstrap -->
-        </button>
-      </div>
+  <div class="search-container">
+    <div class="search-input">
+      <input
+        type="text"
+        v-model="searchQuery"
+        @keyup.enter="searchDeezer(true)"
+        placeholder="Buscar en Deezer"
+      />
+      <button @click="searchDeezer(true)">
+        <i class="bi bi-search"></i>
+      </button>
     </div>
-  </template>
-   <script setup>
-  import { ref } from "vue";
-   const searchQuery = ref(""); // Estado reactivo para la barra de búsqueda
-   // Función para realizar la búsqueda
-  const searchDeezer = async () => {
-    if (searchQuery.value.trim() === "") return; // Evita búsquedas vacías
-    const url = `http://localhost:8080/https://api.deezer.com/search?q=${searchQuery.value}`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Error al buscar en Deezer");
-      }
-      const data = await response.json();
-      emit("results", data.data); // Emitimos los resultados al componente padre
-    } catch (error) {
-      console.error(error.message);
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+
+const searchQuery = ref("");
+const currentIndex = ref(0);
+const isLoading = ref(false);
+const emit = defineEmits(["results"]);
+
+const searchDeezer = async (newSearch = false) => {
+  if (searchQuery.value.trim() === "") return;
+  
+  if (newSearch) {
+    currentIndex.value = 0;
+  }
+
+  try {
+    const url = `http://localhost:8080/https://api.deezer.com/search?q=${searchQuery.value}&index=${currentIndex.value}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Error al buscar en Deezer");
     }
-  };
-   // Define la función para emitir eventos
-  const emit = defineEmits(["results"]);
-  </script>
+    const data = await response.json();
+    
+    // Ensure we emit all necessary data
+    emit("results", {
+      songs: data.data,
+      isNewSearch: newSearch,
+      total: data.total,
+      hasMore: data.next !== undefined
+    });
+    
+    currentIndex.value += 25; // Increment index after successful fetch
+  } catch (error) {
+    console.error(error.message);
+    throw error; // Propagate error to parent
+  }
+};
+
+defineExpose({ loadMore: () => searchDeezer(false) });
+</script>
   <style scoped>
   .search-container {
     display: flex;
@@ -70,4 +90,3 @@
     color: #000;
   }
   </style>
- 
