@@ -36,10 +36,9 @@ const searchDeezer = async (newSearch = false) => {
       throw new Error("Error al buscar en Deezer");
     }
     const data = await response.json();
-    
     // Ensure we emit all necessary data
     emit("results", {
-      songs: data.data,
+      songs: data.data.sort((a, b) => a.id - b.id),
       isNewSearch: newSearch,
       total: data.total,
       hasMore: data.next !== undefined

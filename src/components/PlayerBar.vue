@@ -7,7 +7,6 @@
       @ended="onEnded"
       @loadedmetadata="onLoadedMetadata"
     ></audio>
-
     <div class="container">
       <div class="d-flex align-items-center justify-content-between py-2">
         <div class="d-flex align-items-center gap-3">

@@ -17,7 +17,7 @@
 
     <!-- Lista de canciones -->
     <div v-if="songs.length > 0" class="row g-4">
-      <div class="col-12 col-md-3" v-for="song in filteredAndSortedSongs" :key="song.id">
+      <div class="col-12 col-md-3" v-for="song in filteredAndSortedSongs" >
         <div class="card h-100">
           <img 
             :src="song.album.cover_medium" 
