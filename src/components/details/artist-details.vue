@@ -28,17 +28,10 @@
           >
           <div class="card-body">
             <h5 class="card-title text-truncate">{{ album.title }}</h5>
-            <p class="card-text text-truncate" v-if="album.artist">
-              <a href="#" 
-                @click.prevent="navigateToArtist(album.artist.id)" 
-                class="text-decoration-none">
-                {{ album.artist.name }}
-              </a>
-            </p>
           </div>
           <div class="card-footer">
             <button 
-              @click="navigateToAlbum(album.id)"
+              @click.prevent="navigateToAlbum(album.id)"
               class="btn btn-primary w-100"
             >
               Ver detalles
@@ -55,11 +48,20 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter()
 const route = useRoute()
 const artist = ref([])
 const albums = ref([])
+
 const id = computed(() => route.params.id);
+
+const navigateToAlbum = (albumId) => {
+  router.push(`/info/album/${albumId}`);
+};
+
+
 const fetchArtist = async () => {
   try {
     const url = "http://localhost:8080/https://api.deezer.com/artist/"+id.value;

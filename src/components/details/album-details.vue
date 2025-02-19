@@ -4,7 +4,7 @@
       <img :src="album.cover_medium" :alt="album.title" class="cover-image">
       <div class="main-info">
         <h1>{{ album.title }}</h1>
-        <h2>{{ album.artist?.name }}</h2>
+        <h2><a href="#" @click.prevent="navigateToArtist(album.artist.name)">{{ album.artist?.name }}</a></h2>
         <div class="stats">
           <span><i class="fas fa-calendar"></i> {{ new Date(album.release_date).getFullYear() }}</span>
           <span><i class="fas fa-music"></i> {{ album.nb_tracks }} canciones</span>
@@ -25,7 +25,7 @@
           >
             <i :class="isFavorite(track.id) ? 'fas fa-trash' : 'fas fa-heart'"></i>
           </button>
-          <span class="track-title mx-3">{{ track.title }}</span>
+          <span class="track-title mx-3"><a href="#" @click.prevent="navigateToTrack(track.id)">{{ track.title }}</a></span>
           <span class="track-duration">{{ formatDuration(track.duration) }}</span>
         </li>
       </ol>
@@ -39,12 +39,23 @@ import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 import { useFavoritesStore } from '../../stores/favorites';
 import { usePlayerStore } from '../../stores/playerStore';
+import { useRouter } from 'vue-router';
+ 
 
+const router = useRouter()
 const route = useRoute()
 const id = computed(() => route.params.id)
 const album = ref([])
 const playerStore = usePlayerStore()
 const favoritesStore = useFavoritesStore()
+
+const navigateToArtist = (artistId) => {
+  router.push(`/info/artist/${artistId}`);
+};
+
+const navigateToTrack = (trackId) => {
+  router.push(`/info/track/${trackId}`);
+};
 
 
 const fetchAlbum = async () => {
