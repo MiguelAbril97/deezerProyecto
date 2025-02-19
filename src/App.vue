@@ -9,13 +9,15 @@ import { useFavoritesStore } from './stores/favorites'
 const favoritesStore = useFavoritesStore()
 const user = ref(JSON.parse(localStorage.getItem('user')) || null)
 
+const welcomeModalComponent = ref(null) // Add ref for component
+
 const handleUserCreated = (userData) => {
   user.value = userData
+  // Modal will auto-hide from component
 }
 
 const handleLogin = () => {
-  const welcomeModal = new bootstrap.Modal(document.getElementById('modal'))
-  welcomeModal.show()
+  welcomeModalComponent.value?.show()
 }
 
 const handleLogout = () => {
@@ -41,7 +43,10 @@ const handleLogout = () => {
         <h1>Deezer Music Client</h1>
       </div>
     </header>
-    <WelcomeModal @user-created="handleUserCreated" />
+    <WelcomeModal 
+      ref="welcomeModalComponent"
+      @user-created="handleUserCreated" 
+    />
 
     <!-- Modal de despedida -->
     <div class="modal fade" id="goodbyeModal" tabindex="-1" aria-hidden="true">

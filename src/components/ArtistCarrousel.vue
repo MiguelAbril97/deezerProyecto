@@ -8,14 +8,16 @@
           :key="artist.id" 
           :class="['carousel-item', { 'active': index === 0 }]"
         >
-          <img 
-            :src="artist.picture_xl" 
-            class="d-block w-100" 
-            :alt="artist.name"
-            style="object-fit: cover; height: 400px;"
-          >
-          <div class="carousel-caption">
-            <h3>{{ artist.name }}</h3>
+          <div class="image-container" @click="navigateToArtist(artist.id)" role="button">
+            <img 
+              :src="artist.picture_xl" 
+              class="d-block w-100" 
+              :alt="artist.name"
+              style="object-fit: cover; height: 700px; cursor: pointer;"
+            >
+            <div class="carousel-caption">
+              <h3>{{ artist.name }}</h3>
+            </div>
           </div>
         </div>
       </div>
@@ -37,7 +39,9 @@
 
 <script setup>
 import { onMounted, onUnmounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const props = defineProps({
   artists: {
     type: Array,
@@ -46,6 +50,15 @@ const props = defineProps({
   }
 });
 
+const navigateToArtist = (artistId) => {
+  router.push({
+    name: 'info',
+    params: {
+      type: 'artist',
+      id: artistId
+    }
+  });
+};
 let carousel = null;
 
 const initCarousel = () => {
@@ -93,13 +106,36 @@ onUnmounted(() => {
 <style scoped>
 .carousel-item img {
   width: 100%;
-  height: 400px;
-  object-fit: cover;
+  height: 600px;
+  object-fit: contain;
+  background-color: #000; /* Fondo negro para las imágenes */
 }
 
 .carousel-caption {
   background: rgba(0, 0, 0, 0.5);
   padding: 20px;
   border-radius: 10px;
+}
+
+/* Nuevos estilos para las flechas */
+.carousel-control-prev,
+.carousel-control-next {
+  width: 10%;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.image-container {
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.image-container:hover {
+  opacity: 0.9;
 }
 </style>

@@ -8,38 +8,42 @@
       @loadedmetadata="onLoadedMetadata"
     ></audio>
     <div class="container">
-      <div class="d-flex align-items-center justify-content-between py-2">
-        <div class="d-flex align-items-center gap-3">
+      <div class="player-content">
+        <!-- Sección izquierda con imagen y detalles -->
+        <div class="song-details">
           <img 
             :src="playerStore.currentSong.album.cover_small" 
             :alt="playerStore.currentSong.title"
-            class="rounded"
-            width="40"
+            class="song-cover"
           >
           <div class="song-info">
             <div class="fw-bold">{{ playerStore.currentSong.title }}</div>
-            <div class="small text-muted">{{ playerStore.currentSong.artist.name }}</div>
+            <div class="text-muted">{{ playerStore.currentSong.artist.name }}</div>
           </div>
         </div>
 
-        <div class="player-controls d-flex flex-column align-items-center">
-          <div class="btn-group">
-            <button class="btn btn-sm btn-primary" @click="togglePlay">
+        <!-- Sección central con controles -->
+        <div class="player-controls">
+          <div class="controls-buttons">
+            <button class="control-btn" @click="togglePlay">
               <i :class="playerStore.isPlaying ? 'fas fa-pause' : 'fas fa-play'"></i>
             </button>
-            <button class="btn btn-sm btn-secondary" @click="stop">
+            <button class="control-btn" @click="stop">
               <i class="fas fa-stop"></i>
             </button>
           </div>
-          <div class="progress w-100 mt-2" style="height: 4px;">
-            <div 
-              class="progress-bar" 
-              :style="{ width: playerStore.progress + '%' }"
-            ></div>
+          <div class="progress-container">
+            <div class="progress">
+              <div 
+                class="progress-bar" 
+                :style="{ width: playerStore.progress + '%' }"
+              ></div>
+            </div>
           </div>
         </div>
 
-        <div class="volume-control d-flex align-items-center gap-2">
+        <!-- Sección derecha con volumen -->
+        <div class="volume-control">
           <i class="fas fa-volume-up"></i>
           <input 
             type="range" 
@@ -48,8 +52,7 @@
             step="0.1" 
             v-model="playerStore.volume"
             @input="updateVolume"
-            class="form-range"
-            style="width: 100px;"
+            class="volume-slider"
           >
         </div>
       </div>
@@ -59,19 +62,47 @@
 
 <script setup>
 import { usePlayerStore } from '../stores/playerStore'
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
 const playerStore = usePlayerStore()
 const audioPlayer = ref(null)
 
-// Manejar cambios en el estado de reproducción
-watch(() => playerStore.isPlaying, (newValue) => {
-  if (newValue) {
-    audioPlayer.value?.play()
-  } else {
-    audioPlayer.value?.pause()
+// Añadir watcher para currentSong
+watch(
+  () => playerStore.currentSong,
+  async (newSong) => {
+    if (newSong && audioPlayer.value) {
+      // Esperar a que el audio esté listo
+      await audioPlayer.value.load()
+      if (playerStore.isPlaying) {
+        try {
+          await audioPlayer.value.play()
+        } catch (error) {
+          console.error('Error playing audio:', error)
+        }
+      }
+    }
+  },
+  { immediate: true }
+)
+
+// Modificar el watcher de isPlaying
+watch(
+  () => playerStore.isPlaying,
+  async (newValue) => {
+    if (audioPlayer.value) {
+      if (newValue) {
+        try {
+          await audioPlayer.value.play()
+        } catch (error) {
+          console.error('Error playing audio:', error)
+        }
+      } else {
+        audioPlayer.value.pause()
+      }
+    }
   }
-})
+)
 
 // Manejar cambios en el volumen
 watch(() => playerStore.volume, (newValue) => {
@@ -131,48 +162,90 @@ const updateVolume = () => {
   right: 0;
   background: #fff;
   padding: 1rem;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-  display: flex;
-  justify-content: space-between;
+  box-shadow: 0 -0.125rem 0.625rem rgba(0,0,0,0.1);
+}
+
+.player-content {
+  display: grid;
+  grid-template-columns: 25% 50% 25%;
   align-items: center;
+  gap: 2rem;
+}
+
+.song-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.song-cover {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.25rem;
 }
 
 .song-info {
   display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.player-controls {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.controls-buttons {
+  display: flex;
   gap: 1rem;
 }
 
-.song-info img {
-  width: 50px;
-  height: 50px;
-}
-
-.controls {
+.control-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-}
-
-.play-btn, .stop-btn {
-  background: none;
-  border: none;
+  justify-content: center;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
+  transition: all 0.2s;
 }
 
-.play-btn:hover, .stop-btn:hover {
-  background: rgba(0,0,0,0.1);
+.control-btn:hover {
+  background: #0056b3;
+}
+
+.progress-container {
+  width: 100%;
+}
+
+.progress {
+  height: 0.25rem;
+  background: #e9ecef;
+  border-radius: 0.125rem;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: #007bff;
+  height: 100%;
+  transition: width 0.1s linear;
 }
 
 .volume-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 1rem;
+  justify-content: flex-end;
 }
 
-.volume-control input[type="range"] {
-  width: 100px;
+.volume-slider {
+  width: 7.5rem;
 }
 </style>

@@ -46,12 +46,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min'
+import { Modal } from 'bootstrap'
 
 const userName = ref('')
 const selectedAvatar = ref('')
 const modalRef = ref(null)
-let welcomeModal = null
+const modal = ref(null) // Add this line
 // Array de URLs de avatares (puedes personalizar estas URLs)
 const avatars = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
@@ -65,7 +65,6 @@ const avatars = [
 const emit = defineEmits(['userCreated'])
 
 const saveUser = () => {
-    
   if (!userName.value || !selectedAvatar.value) return
 
   const userData = {
@@ -76,21 +75,21 @@ const saveUser = () => {
 
   localStorage.setItem('user', JSON.stringify(userData))
   emit('userCreated', userData)
-  modal.value.hide();
-  console.log(userData)
+  modal.value.hide()
 }
 
 onMounted(() => {
-  // Seleccionar el primer avatar por defecto
   selectedAvatar.value = avatars[0]
+  modal.value = new Modal(modalRef.value)
   
-  // Inicializar el modal de Bootstrap
-  welcomeModal = new Modal(modalRef.value)
-  
-  // Mostrar el modal si no hay usuario guardado
-  if (window.onload && !localStorage.getItem('user')) {
-    welcomeModal.value.show()
+  // Show modal if no user exists
+  if (!localStorage.getItem('user')) {
+    modal.value.show()
   }
+})
+
+defineExpose({
+  show: () => modal.value?.show()
 })
 </script>
 

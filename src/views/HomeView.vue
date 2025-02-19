@@ -15,7 +15,8 @@
     <!-- Fila de albums más populares -->
     <h2>Álbumes destacados</h2>
     <div v-if="topAlbum.length > 0" class="row g-4">
-      <div v-for="album in topAlbum" :key="album.id" class="col-12 col-md-3">
+      <div v-for="album in topAlbum" :key="album.id" 
+      class="col-12 col-sm-6 col-md-4 col-lg-3">
         <div class="card h-100">
           <img 
             :src="album.cover_medium" 
@@ -51,7 +52,8 @@
 
     <!-- Grid de canciones -->
     <div v-if="topSongs.length > 0" class="row g-4">
-      <div v-for="song in topSongs" :key="song.id" class="col-12 col-md-3">
+      <div v-for="song in topSongs" :key="song.id" 
+      class="col-12 col-sm-6 col-md-4 col-lg-3">
         <div class="card h-100">
           <img 
             :src="song.album.cover_medium" 

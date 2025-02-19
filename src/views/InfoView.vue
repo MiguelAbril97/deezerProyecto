@@ -1,10 +1,11 @@
 
 <script setup>
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, watch, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const { type, id } = route.params;
+const componentKey = ref(0);
 
 // Cargar dinámicamente el componente según el tipo
 const DynamicComponent = computed(() => {
@@ -19,6 +20,13 @@ const DynamicComponent = computed(() => {
 
   //return defineAsyncComponent(() => import(`@/components/details/${type}-details.vue`));
 });
+
+watch(
+  () => route.params,
+  () => {
+    componentKey.value++; // Force component reload
+  }
+);
 </script>
 
 <template>
@@ -26,7 +34,7 @@ const DynamicComponent = computed(() => {
     <div class="loading" v-if="loading">Cargando...</div>
     
     <div>
-    <component :is="DynamicComponent" :id="id"></component>
+    <component :is="DynamicComponent"  :key="componentKey"></component>
     </div>
 
   </div>

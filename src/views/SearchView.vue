@@ -17,7 +17,7 @@
 
     <!-- Lista de canciones -->
     <div v-if="songs.length > 0" class="row g-4">
-      <div class="col-12 col-md-3" v-for="song in filteredAndSortedSongs" >
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3" v-for="song in filteredAndSortedSongs" >
         <div class="card h-100">
           <img 
             :src="song.album.cover_medium" 
@@ -110,16 +110,34 @@ const favoritesStore = useFavoritesStore();
 const isFavorite = (id) => favoritesStore.isFavorite(id);
   
 
-const navigateToArtist = (artistId) => {
-  router.push(`/info/artist/${artistId}`);
+const navigateToAlbum = (albumId) => {
+  router.push({
+    name: 'info',
+    params: {
+      type: 'album',
+      id: albumId
+    }
+  });
 };
 
-const navigateToAlbum = (albumId) => {
-  router.push(`/info/album/${albumId}`);
+const navigateToArtist = (artistId) => {
+  router.push({
+    name: 'info',
+    params: {
+      type: 'artist',
+      id: artistId
+    }
+  });
 };
 
 const navigateToTrack = (trackId) => {
-  router.push(`/info/track/${trackId}`);
+  router.push({
+    name: 'info',
+    params: {
+      type: 'track',
+      id: trackId
+    }
+  });
 };
 
 const handleSearchResults = ({ songs: newSongs, isNewSearch, total: newTotal, hasMore: moreAvailable }) => {
@@ -243,5 +261,36 @@ a:hover {
 
 .progress {
   display: none;
+}
+
+@media (max-width: 576px) {
+  .card {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .card {
+    width: 220px;
+  }
+}
+
+@media (min-width: 769px) {
+  .card {
+    width: 250px;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+  }
 }
 </style>

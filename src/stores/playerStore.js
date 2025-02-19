@@ -9,12 +9,11 @@ export const usePlayerStore = defineStore('player', () => {
   const duration = ref(0)
 
   function playSong(song) {
-    if (currentSong.value?.id === song.id) {
-      isPlaying.value = true
-      return
-    }
     currentSong.value = song
-    isPlaying.value = true
+    // Aseguramos que isPlaying se establece a true después de asignar la canción
+    setTimeout(() => {
+      isPlaying.value = true
+    }, 0)
     progress.value = 0
   }
 

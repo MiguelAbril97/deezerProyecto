@@ -48,11 +48,22 @@ const favoritesStore = useFavoritesStore()
 
 
 const navigateToArtist = (artistId) => {
-  router.push(`/info/artist/${artistId}`);
+  router.push({
+    name: 'info',
+    params: {
+      type: 'artist',
+      id: artistId
+    }
+  });
 };
-
 const navigateToAlbum = (albumId) => {
-  router.push(`/info/album/${albumId}`);
+  router.push({
+    name: 'info',
+    params: {
+      type: 'album',
+      id: albumId
+    }
+  });
 };
 
 const fetchTrack = async () => {
