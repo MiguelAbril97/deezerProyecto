@@ -77,6 +77,15 @@ const fetchAlbums = async () => {
     console.error('Error:', error)
   }
 }
+const navigateToAlbum = (albumId) => {
+  router.push({
+    name: 'info',
+    params: {
+      type: 'album',
+      id: albumId
+    }
+  });
+};
 
 onMounted(() => {
   fetchArtist();
