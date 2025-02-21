@@ -54,19 +54,7 @@ const router = useRouter()
 const route = useRoute()
 const artist = ref([])
 const albums = ref([])
-
 const id = computed(() => route.params.id);
-
-const navigateToAlbum = (albumId) => {
-  router.push({
-    name: 'info',
-    params: {
-      type: 'album',
-      id: albumId
-    }
-  });
-};
-
 const fetchArtist = async () => {
   try {
     const url = "http://localhost:8080/https://api.deezer.com/artist/"+id.value;
